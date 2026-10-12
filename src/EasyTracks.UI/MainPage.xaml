@@ -10,53 +10,63 @@
     mc:Ignorable="d"
     Background="#09090B">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <!-- ROW 0: Transport & Master Bar -->
         <controls:TransportBarControl
             Grid.Row="0"
             ViewModel="{x:Bind ViewModel.Transport, Mode=OneWay}" />
 
-        <!-- ROW 1: Arrangement / Song Sections Ribbon -->
+        <!-- ROW 1: Setlist Songs Carousel (Album Art + Name + BPM + Key) -->
         <Border
             Grid.Row="1"
+            Background="#0E0E11"
+            BorderBrush="#27272A"
+            BorderThickness="0,0,0,1"
+            Padding="16,8">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.SetlistSongs, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SongItemViewModel">
+                            <controls:SetlistCardControl
+                                ViewModel="{x:Bind}"
+                                CardClicked="OnSetlistCardClicked" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ROW 2: Arrangement Timeline with Soundwaves (Intro, Verse, Chorus, etc.) -->
+        <Border
+            Grid.Row="2"
             Background="#121214"
             BorderBrush="#27272A"
             BorderThickness="0,0,0,1"
             Padding="16,8">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <!-- Arrangement Section Blocks -->
-                    <Border Background="#3B82F6" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="INTRO" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#10B981" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="VERSE 1" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#F59E0B" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="CHORUS" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#10B981" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="VERSE 2" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#F59E0B" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="CHORUS" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#8B5CF6" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="BRIDGE" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#F59E0B" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="CHORUS" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                    <Border Background="#64748B" CornerRadius="4" Padding="12,6">
-                        <TextBlock Text="OUTRO" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" />
-                    </Border>
-                </StackPanel>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.ActiveSections, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="4" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SectionWaveformViewModel">
+                            <controls:WaveformSectionControl ViewModel="{x:Bind}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
         </Border>
 
-        <!-- ROW 2: Stem Channel Rack + Master Strip -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="12,8,12,12">
+        <!-- ROW 3: Stem Channel Rack + Master Strip -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="12,8,12,12">
 
             <!-- Horizontal Scrollable Stems Rack -->
             <ScrollViewer

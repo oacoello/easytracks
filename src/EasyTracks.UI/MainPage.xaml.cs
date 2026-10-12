@@ -17,4 +17,9 @@ public sealed partial class MainPage : Page
     {
         InitializeComponent();
     }
+
+    private void OnSetlistCardClicked(object sender, ViewModels.SongItemViewModel song)
+    {
+        ViewModel.SelectSong(song);
+    }
 }
