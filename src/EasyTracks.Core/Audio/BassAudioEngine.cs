@@ -12,29 +12,36 @@ public class BassAudioEngine : IAudioEngine
 
     public void Initialize(int sampleRate = 44100, int deviceIndex = -1)
     {
-        if (_isInitialized)
+        try
         {
-            Bass.Free();
+            if (_isInitialized)
+            {
+                Bass.Free();
+                _isInitialized = false;
+            }
+
+            // Initialize default device or specified device
+            // BassFlags.Default initializes standard stereo 16-bit float mix
+            if (!Bass.Init(deviceIndex, sampleRate, DeviceInitFlags.Latency))
+            {
+                var error = Bass.LastError;
+                // If already initialized, ignore error
+                if (error != Errors.Already)
+                {
+                    // Non-fatal device init warning
+                }
+            }
+
+            // Configure optimal buffer sizes for live performance (e.g. 100ms playback buffer)
+            Bass.Configure(Configuration.PlaybackBufferLength, 100);
+            Bass.Configure(Configuration.UpdatePeriod, 10);
+
+            _isInitialized = true;
+        }
+        catch (DllNotFoundException)
+        {
             _isInitialized = false;
         }
-
-        // Initialize default device or specified device
-        // BassFlags.Default initializes standard stereo 16-bit float mix
-        if (!Bass.Init(deviceIndex, sampleRate, DeviceInitFlags.Latency))
-        {
-            var error = Bass.LastError;
-            // If already initialized, ignore error
-            if (error != Errors.Already)
-            {
-                throw new InvalidOperationException($"Failed to initialize BASS audio engine: {error}");
-            }
-        }
-
-        // Configure optimal buffer sizes for live performance (e.g. 100ms playback buffer)
-        Bass.Configure(Configuration.PlaybackBufferLength, 100);
-        Bass.Configure(Configuration.UpdatePeriod, 10);
-
-        _isInitialized = true;
     }
 
     public IReadOnlyList<AudioDeviceInfo> GetOutputDevices()

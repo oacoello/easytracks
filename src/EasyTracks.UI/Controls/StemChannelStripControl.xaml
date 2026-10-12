@@ -24,7 +24,7 @@
                 <Border
                     Height="4"
                     CornerRadius="2"
-                    Background="{x:Bind ViewModel.CategoryColorHex, Mode=OneWay}" />
+                    Background="{x:Bind ViewModel.CategoryBrush, Mode=OneWay}" />
 
                 <TextBlock
                     Text="{x:Bind ViewModel.Name, Mode=OneWay}"

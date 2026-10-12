@@ -15,6 +15,7 @@ public partial class StemChannelViewModel : ObservableObject
     public string Name { get; }
     public StemCategory Category { get; }
     public string CategoryColorHex { get; }
+    public Microsoft.UI.Xaml.Media.SolidColorBrush CategoryBrush { get; }
 
     [ObservableProperty]
     private double _volume; // 0.0 to 1.0 (or up to 1.25)
@@ -61,6 +62,7 @@ public partial class StemChannelViewModel : ObservableObject
         IsSolo = stem.IsSolo;
         OutputBusIndex = stem.OutputBusIndex;
         CategoryColorHex = GetCategoryColor(stem.Category);
+        CategoryBrush = GetCategoryBrush(stem.Category);
 
         _onVolumeChanged = onVolumeChanged;
         _onPanChanged = onPanChanged;
@@ -129,4 +131,13 @@ public partial class StemChannelViewModel : ObservableObject
         StemCategory.SoundEffects => "#64748B",  // Slate
         _ => "#94A3B8"                           // Neutral Gray
     };
+
+    private static Microsoft.UI.Xaml.Media.SolidColorBrush GetCategoryBrush(StemCategory category)
+    {
+        var hex = GetCategoryColor(category);
+        byte r = Convert.ToByte(hex.Substring(1, 2), 16);
+        byte g = Convert.ToByte(hex.Substring(3, 2), 16);
+        byte b = Convert.ToByte(hex.Substring(5, 2), 16);
+        return new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, r, g, b));
+    }
 }

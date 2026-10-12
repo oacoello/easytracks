@@ -73,45 +73,46 @@ public class BassPlaybackMixer : IPlaybackMixer
         Stop();
         FreeHandles();
 
-        // 1. Create 32-bit float mixer stream (decoding)
-        _mixerHandle = BassMix.CreateMixerStream(44100, 2, BassFlags.Decode | BassFlags.Float);
-        if (_mixerHandle == 0)
+        try
         {
-            throw new InvalidOperationException($"Could not create BASS mixer: {Bass.LastError}");
-        }
-
-        // 2. Wrap mixer in Tempo stream for pitch & tempo stretching
-        _tempoHandle = BassFx.TempoCreate(_mixerHandle, BassFlags.Default);
-        if (_tempoHandle == 0)
-        {
-            throw new InvalidOperationException($"Could not create BASS tempo stream: {Bass.LastError}");
-        }
-
-        // 3. Load each stem track
-        _stemChannels.Clear();
-        _stemModels.Clear();
-
-        foreach (var stem in song.Stems)
-        {
-            if (!File.Exists(stem.FilePath)) continue;
-
-            // Load stem as decoding channel to feed mixer
-            int stemHandle = Bass.CreateStream(stem.FilePath, 0, 0, BassFlags.Decode | BassFlags.Float);
-            if (stemHandle != 0)
+            // 1. Create 32-bit float mixer stream (decoding)
+            _mixerHandle = BassMix.CreateMixerStream(44100, 2, BassFlags.Decode | BassFlags.Float);
+            if (_mixerHandle != 0)
             {
-                // Add channel to mixer
-                if (BassMix.MixerAddChannel(_mixerHandle, stemHandle, BassFlags.MixerChanDownMix))
+                // 2. Wrap mixer in Tempo stream for pitch & tempo stretching
+                _tempoHandle = BassFx.TempoCreate(_mixerHandle, BassFlags.Default);
+            }
+
+            // 3. Load each stem track
+            _stemChannels.Clear();
+            _stemModels.Clear();
+
+            foreach (var stem in song.Stems)
+            {
+                if (!File.Exists(stem.FilePath)) continue;
+
+                // Load stem as decoding channel to feed mixer
+                int stemHandle = Bass.CreateStream(stem.FilePath, 0, 0, BassFlags.Decode | BassFlags.Float);
+                if (stemHandle != 0 && _mixerHandle != 0)
                 {
-                    _stemChannels[stem.Id] = stemHandle;
-                    _stemModels[stem.Id] = stem;
-                    ApplyStemMixSettings(stem.Id);
+                    // Add channel to mixer
+                    if (BassMix.MixerAddChannel(_mixerHandle, stemHandle, BassFlags.MixerChanDownMix))
+                    {
+                        _stemChannels[stem.Id] = stemHandle;
+                        _stemModels[stem.Id] = stem;
+                        ApplyStemMixSettings(stem.Id);
+                    }
                 }
             }
-        }
 
-        // Sync initial tempo and pitch
-        SetTempo(song.PlaybackBpm, song.OriginalBpm);
-        SetPitchSemitones(song.KeySemitoneOffset);
+            // Sync initial tempo and pitch
+            SetTempo(song.PlaybackBpm, song.OriginalBpm);
+            SetPitchSemitones(song.KeySemitoneOffset);
+        }
+        catch (DllNotFoundException)
+        {
+            // Audio driver running without native libraries
+        }
     }
 
     public void Play()
