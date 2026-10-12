@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "EasyTracks.UI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "EasyTracks.UI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
