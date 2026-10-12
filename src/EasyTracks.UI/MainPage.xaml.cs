@@ -11,10 +11,10 @@ namespace EasyTracks_UI;
 /// </summary>
 public sealed partial class MainPage : Page
 {
+    public ViewModels.MainViewModel ViewModel { get; } = new();
+
     public MainPage()
     {
         InitializeComponent();
-
-        // TODO: Add your initialization logic here.
     }
 }
