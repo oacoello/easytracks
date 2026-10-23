@@ -8,69 +8,107 @@
     xmlns:vm="using:EasyTracks_UI.ViewModels"
     mc:Ignorable="d">
 
-    <Button
-        Click="OnCardClicked"
+    <Border
+        Tapped="OnCardTapped"
         Padding="0"
         Background="Transparent"
         BorderThickness="0"
         CornerRadius="8"
-        Margin="0,0,10,0">
+        Margin="0,0,6,0">
 
         <Border
-            Width="175"
-            Height="64"
-            Background="#18181B"
+            Width="254"
+            Height="92"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{x:Bind GetBorderBrush(ViewModel.IsSelected), Mode=OneWay}"
             BorderThickness="{x:Bind GetBorderThickness(ViewModel.IsSelected), Mode=OneWay}"
-            CornerRadius="8"
-            Padding="8">
+            CornerRadius="10"
+            Padding="10">
 
-            <Grid ColumnDefinitions="48,*">
+            <Grid ColumnDefinitions="Auto,72,*,Auto">
 
-                <!-- Album Art / Thumbnail Placeholder -->
-                <Border
+                <!-- Drag Handle Indicator (Visible in EDIT Mode) -->
+                <FontIcon
                     Grid.Column="0"
-                    Width="48"
-                    Height="48"
-                    CornerRadius="6"
-                    Background="{x:Bind GetCoverBrush(ViewModel.CoverGradientStart), Mode=OneWay}">
-                    <FontIcon Glyph="&#xEC4F;" FontSize="18" Foreground="#FFFFFF" />
+                    Visibility="{x:Bind ViewModel.EditVisibility, Mode=OneWay}"
+                    Glyph="&#xE784;"
+                    FontSize="14"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0"
+                    ToolTipService.ToolTip="Arrastra para reordenar en el Setlist" />
+
+                <!-- Album Art / Thumbnail (Large) -->
+                <Border
+                    Grid.Column="1"
+                    Width="72"
+                    Height="72"
+                    CornerRadius="8"
+                    Background="{x:Bind ViewModel.CoverBrush, Mode=OneWay}">
+                    <Grid>
+                        <FontIcon
+                            Visibility="{x:Bind ViewModel.CoverIconVisibility, Mode=OneWay}"
+                            Glyph="&#xEC4F;"
+                            FontSize="26"
+                            Foreground="#FFFFFF" />
+                        <Image
+                            Visibility="{x:Bind ViewModel.CoverImageVisibility, Mode=OneWay}"
+                            Source="{x:Bind ViewModel.CoverImageSource, Mode=OneWay}"
+                            Stretch="UniformToFill" />
+                    </Grid>
                 </Border>
 
-                <!-- Song Details -->
-                <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                <!-- Song Details: Title & Stems Missing Alert -->
+                <StackPanel Grid.Column="2" Margin="12,0,6,0" VerticalAlignment="Center" Spacing="3">
                     <TextBlock
                         Text="{x:Bind ViewModel.Title, Mode=OneWay}"
                         FontWeight="Bold"
-                        FontSize="13"
-                        Foreground="#F4F4F5"
-                        TextTrimming="CharacterEllipsis" />
-
-                    <TextBlock
-                        Text="{x:Bind ViewModel.Artist, Mode=OneWay}"
-                        FontSize="11"
-                        Foreground="#A1A1AA"
+                        FontSize="14"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         TextTrimming="CharacterEllipsis"
-                        Margin="0,1,0,3" />
+                        MaxLines="2"
+                        TextWrapping="Wrap" />
 
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Border Background="#27272A" CornerRadius="3" Padding="4,1">
+                    <!-- Stems missing warning (Only shown if audio files are not in folder) -->
+                    <Border
+                        Visibility="{x:Bind ViewModel.StemsMissingVisibility, Mode=OneWay}"
+                        Background="#3B1219"
+                        BorderBrush="#EF4444"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="6,2"
+                        HorizontalAlignment="Left"
+                        ToolTipService.ToolTip="{x:Bind ViewModel.StemsMissingTooltip, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE783;" FontSize="10" Foreground="#F87171" />
                             <TextBlock
-                                Text="{x:Bind ViewModel.KeyDisplay, Mode=OneWay}"
+                                Text="Stems no encontrados"
                                 FontSize="9"
-                                FontWeight="SemiBold"
-                                Foreground="#38BDF8" />
-                        </Border>
-                        <Border Background="#27272A" CornerRadius="3" Padding="4,1">
-                            <TextBlock
-                                Text="{x:Bind GetBpmText(ViewModel.Bpm), Mode=OneWay}"
-                                FontSize="9"
-                                Foreground="#A1A1AA" />
-                        </Border>
-                    </StackPanel>
+                                FontWeight="Bold"
+                                Foreground="#F87171" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
+
+                <!-- Delete Button inside Card (Visible in EDIT mode) -->
+                <Button
+                    Grid.Column="3"
+                    Click="OnDeleteClicked"
+                    Visibility="{x:Bind ViewModel.EditVisibility, Mode=OneWay}"
+                    Content="&#xE74D;"
+                    FontFamily="Segoe Fluent Icons"
+                    FontSize="12"
+                    Width="30"
+                    Height="30"
+                    Padding="0"
+                    CornerRadius="6"
+                    Background="#3F1D1D"
+                    Foreground="#EF4444"
+                    BorderThickness="0"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="Eliminar del Setlist" />
 
             </Grid>
         </Border>
-    </Button>
+    </Border>
 </UserControl>

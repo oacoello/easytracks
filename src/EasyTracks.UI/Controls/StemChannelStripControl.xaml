@@ -11,8 +11,8 @@
     Margin="4,4,4,8">
 
     <Border
-        Background="#18181B"
-        BorderBrush="#27272A"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
         CornerRadius="8"
         Padding="6,8">
@@ -32,12 +32,12 @@
                     FontSize="12"
                     TextTrimming="CharacterEllipsis"
                     HorizontalAlignment="Center"
-                    Foreground="#F4F4F5" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                 
                 <TextBlock
                     Text="{x:Bind ViewModel.PanText, Mode=OneWay}"
                     FontSize="10"
-                    Foreground="#A1A1AA"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     HorizontalAlignment="Center" />
             </StackPanel>
 
@@ -48,9 +48,10 @@
                 Maximum="1.0"
                 StepFrequency="0.05"
                 Value="{x:Bind ViewModel.Pan, Mode=TwoWay}"
+                DoubleTapped="OnPanSliderDoubleTapped"
                 SmallChange="0.05"
                 Margin="0,2,0,4"
-                ToolTipService.ToolTip="{x:Bind ViewModel.PanText, Mode=OneWay}" />
+                ToolTipService.ToolTip="Doble clic para centrar (C)" />
 
             <!-- Mute & Solo Buttons -->
             <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,2,0,8" ColumnSpacing="4">
@@ -63,8 +64,8 @@
                     HorizontalAlignment="Stretch"
                     Height="28"
                     Padding="0"
-                    Background="{x:Bind ViewModel.IsMuted, Mode=OneWay, Converter={StaticResource MuteColorConverter}}"
-                    Foreground="#FFFFFF" />
+                    Background="{x:Bind GetMuteBrush(ViewModel.IsMuted), Mode=OneWay}"
+                    Foreground="{x:Bind GetMuteSoloForeground(ViewModel.IsMuted), Mode=OneWay}" />
 
                 <ToggleButton
                     Grid.Column="1"
@@ -75,12 +76,12 @@
                     HorizontalAlignment="Stretch"
                     Height="28"
                     Padding="0"
-                    Background="{x:Bind ViewModel.IsSolo, Mode=OneWay, Converter={StaticResource SoloColorConverter}}"
-                    Foreground="#FFFFFF" />
+                    Background="{x:Bind GetSoloBrush(ViewModel.IsSolo), Mode=OneWay}"
+                    Foreground="{x:Bind GetMuteSoloForeground(ViewModel.IsSolo), Mode=OneWay}" />
             </Grid>
 
-            <!-- Fader & VU Meter Section -->
-            <Grid Grid.Row="3" ColumnDefinitions="*,12" Margin="0,4">
+            <!-- Fader & VU Meter Section (Compact) -->
+            <Grid Grid.Row="3" ColumnDefinitions="*,10" Margin="0,2">
                 <!-- Vertical Fader -->
                 <Slider
                     Grid.Column="0"
@@ -89,23 +90,25 @@
                     Maximum="1.25"
                     StepFrequency="0.01"
                     Value="{x:Bind ViewModel.Volume, Mode=TwoWay}"
+                    DoubleTapped="OnVolumeSliderDoubleTapped"
+                    ToolTipService.ToolTip="Doble clic para regresar a 0.0 dB (Volumen 1)"
                     HorizontalAlignment="Center"
-                    Height="180" />
+                    Height="120" />
 
                 <!-- VU Meter Level Bar -->
                 <Border
                     Grid.Column="1"
-                    Background="#27272A"
+                    Background="{ThemeResource ControlStrongStrokeColorDisabledBrush}"
                     CornerRadius="3"
                     Width="6"
-                    Height="180"
+                    Height="120"
                     VerticalAlignment="Center">
                     <Grid VerticalAlignment="Bottom">
                         <Border
                             Background="#10B981"
                             CornerRadius="3"
                             Width="6"
-                            Height="90" />
+                            Height="{x:Bind ViewModel.MeterHeight, Mode=OneWay}" />
                     </Grid>
                 </Border>
             </Grid>
@@ -116,22 +119,26 @@
                 Text="{x:Bind ViewModel.VolumeDbText, Mode=OneWay}"
                 FontSize="11"
                 FontFamily="Consolas"
-                Foreground="#E4E4E7"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                 HorizontalAlignment="Center"
                 Margin="0,4,0,4" />
 
             <!-- Output Bus Selector Button -->
             <Button
                 Grid.Row="5"
-                Content="Out 1/2"
+                Content="{x:Bind ViewModel.OutputBusText, Mode=OneWay}"
+                Click="OnOutputBusSelectorClick"
                 FontSize="10"
+                FontWeight="SemiBold"
                 HorizontalAlignment="Stretch"
                 Height="24"
-                Padding="0"
-                Background="#27272A"
-                Foreground="#A1A1AA"
-                BorderThickness="0"
-                CornerRadius="4" />
+                Padding="2,0"
+                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                Foreground="#0284C7"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                ToolTipService.ToolTip="Seleccionar salida (Mackie DL16S USB 1-16 o Split L/R)" />
         </Grid>
     </Border>
 </UserControl>

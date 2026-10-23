@@ -11,7 +11,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Background="#09090B">
-        <Frame x:Name="RootFrame" />
+    <Grid Background="Transparent">
+        <Frame x:Name="RootFrame" Background="Transparent" />
     </Grid>
 </Window>

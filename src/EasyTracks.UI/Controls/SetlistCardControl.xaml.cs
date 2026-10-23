@@ -8,8 +8,8 @@ namespace EasyTracks_UI.Controls;
 
 public sealed partial class SetlistCardControl : UserControl
 {
-    private static readonly SolidColorBrush SelectedBrush = new(Color.FromArgb(255, 16, 185, 129)); // #10B981 Emerald
-    private static readonly SolidColorBrush NormalBrush = new(Color.FromArgb(255, 39, 39, 42));     // #27272A
+    private static readonly SolidColorBrush SelectedBrush = new(Windows.UI.Color.FromArgb(255, 16, 185, 129)); // #10B981 Emerald
+    private static readonly SolidColorBrush NormalBrush = new(Windows.UI.Color.FromArgb(255, 39, 39, 42));     // #27272A
 
     public static readonly DependencyProperty ViewModelProperty =
         DependencyProperty.Register(
@@ -25,17 +25,26 @@ public sealed partial class SetlistCardControl : UserControl
     }
 
     public event EventHandler<SongItemViewModel>? CardClicked;
+    public event EventHandler<SongItemViewModel>? DeleteClicked;
 
     public SetlistCardControl()
     {
         this.InitializeComponent();
     }
 
-    private void OnCardClicked(object sender, RoutedEventArgs e)
+    private void OnCardTapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
     {
         if (ViewModel != null)
         {
             CardClicked?.Invoke(this, ViewModel);
+        }
+    }
+
+    private void OnDeleteClicked(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            DeleteClicked?.Invoke(this, ViewModel);
         }
     }
 
@@ -47,13 +56,13 @@ public sealed partial class SetlistCardControl : UserControl
     {
         if (string.IsNullOrEmpty(hex) || !hex.StartsWith("#") || hex.Length < 7)
         {
-            return new SolidColorBrush(Color.FromArgb(255, 59, 130, 246));
+            return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 59, 130, 246));
         }
 
         byte r = Convert.ToByte(hex.Substring(1, 2), 16);
         byte g = Convert.ToByte(hex.Substring(3, 2), 16);
         byte b = Convert.ToByte(hex.Substring(5, 2), 16);
-        return new SolidColorBrush(Color.FromArgb(255, r, g, b));
+        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, r, g, b));
     }
 
     private string GetBpmText(double bpm) => $"{(int)bpm} BPM";

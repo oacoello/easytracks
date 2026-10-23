@@ -30,6 +30,10 @@ public class Setlist
     public DateTime DateCreated { get; set; } = DateTime.UtcNow;
     public List<SetlistItem> Items { get; set; } = new();
 
+    public string FormattedDate => DateCreated.ToString("dd MMM yyyy");
+    public int SongCount => Items.Count;
+    public string SummaryText => $"{FormattedDate} • {Items.Count} canción{(Items.Count == 1 ? "" : "es")}";
+
     public Setlist() { }
 
     public Setlist(string name)

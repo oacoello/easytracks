@@ -3,19 +3,16 @@
     x:Class="EasyTracks_UI.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:EasyTracks_UI"
-    xmlns:converters="using:EasyTracks_UI.Converters">
+    xmlns:local="using:EasyTracks_UI">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <converters:MuteColorConverter x:Key="MuteColorConverter" />
-            <converters:SoloColorConverter x:Key="SoloColorConverter" />
-            <converters:PlayPauseIconConverter x:Key="PlayPauseIconConverter" />
-            <converters:PlayPauseColorConverter x:Key="PlayPauseColorConverter" />
-            <converters:PadActiveColorConverter x:Key="PadActiveColorConverter" />
+
+            <SolidColorBrush x:Key="AppAccentBrush" Color="{ThemeResource SystemAccentColor}" />
+            <SolidColorBrush x:Key="CardLayerBackgroundBrush" Color="#18181B" Opacity="0.85" />
+            <SolidColorBrush x:Key="SubtleBorderBrush" Color="#27272A" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

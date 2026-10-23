@@ -9,226 +9,415 @@
     mc:Ignorable="d">
 
     <Border
-        Background="#121214"
-        BorderBrush="#27272A"
+        Background="Transparent"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="0,0,0,1"
-        Padding="16,12">
+        Padding="16,10">
 
         <Grid ColumnDefinitions="Auto,*,Auto">
 
-            <!-- LEFT: Playback Transport Buttons -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                
-                <!-- Stop Button -->
-                <Button
-                    Command="{x:Bind ViewModel.StopCommand, Mode=OneWay}"
-                    Width="40"
-                    Height="40"
-                    CornerRadius="20"
-                    Background="#27272A"
-                    BorderThickness="0">
-                    <FontIcon Glyph="&#xE71A;" FontSize="14" Foreground="#A1A1AA" />
-                </Button>
+            <!-- LEFT: Brand Logo, Time Sig & Stage Beat Counter -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <!-- Brand Logo (EasyTracks) -->
+                <Image
+                    Source="ms-appx:///Assets/icon2.png"
+                    Height="30"
+                    VerticalAlignment="Center"
+                    Margin="0,0,4,0"
+                    ToolTipService.ToolTip="EasyTracks" />
 
-                <!-- Big Play / Pause Button -->
-                <Button
-                    Command="{x:Bind ViewModel.TogglePlayPauseCommand, Mode=OneWay}"
-                    Width="52"
-                    Height="52"
-                    CornerRadius="26"
-                    Background="{x:Bind ViewModel.IsPlaying, Mode=OneWay, Converter={StaticResource PlayPauseColorConverter}}"
-                    BorderThickness="0">
-                    <FontIcon
-                        Glyph="{x:Bind ViewModel.IsPlaying, Mode=OneWay, Converter={StaticResource PlayPauseIconConverter}}"
-                        FontSize="20"
-                        Foreground="#FFFFFF" />
-                </Button>
+                <!-- STAGE BEAT DISPLAY (1 - 2 - 3 - 4 + Bar Counter) -->
+                <Border
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="10,4"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="Contador de Compás y Tiempos en Vivo (Beat 1 = Acento Fuerte)">
+                    <StackPanel Spacing="3">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <Border Width="24" Height="20" CornerRadius="4" Background="{x:Bind ViewModel.Beat1Brush, Mode=OneWay}">
+                                <TextBlock Text="1" FontSize="12" FontWeight="ExtraBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{x:Bind ViewModel.Beat1TextBrush, Mode=OneWay}" />
+                            </Border>
+                            <Border Width="24" Height="20" CornerRadius="4" Background="{x:Bind ViewModel.Beat2Brush, Mode=OneWay}">
+                                <TextBlock Text="2" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{x:Bind ViewModel.Beat2TextBrush, Mode=OneWay}" />
+                            </Border>
+                            <Border Width="24" Height="20" CornerRadius="4" Background="{x:Bind ViewModel.Beat3Brush, Mode=OneWay}">
+                                <TextBlock Text="3" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{x:Bind ViewModel.Beat3TextBrush, Mode=OneWay}" />
+                            </Border>
+                            <Border Width="24" Height="20" CornerRadius="4" Background="{x:Bind ViewModel.Beat4Brush, Mode=OneWay}">
+                                <TextBlock Text="4" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{x:Bind ViewModel.Beat4TextBrush, Mode=OneWay}" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <TextBlock
+                                Text="{x:Bind ViewModel.BarBeatDisplay, Mode=OneWay}"
+                                FontFamily="Consolas"
+                                FontSize="9"
+                                FontWeight="Bold"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                Text="•"
+                                FontSize="9"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.TimeSignature, Mode=OneWay}"
+                                FontFamily="Consolas"
+                                FontSize="9"
+                                FontWeight="Bold"
+                                Foreground="#0284C7"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
-            <!-- CENTER: Song Info, Time & Timeline Scrubber -->
-            <Grid Grid.Column="1" Margin="24,0" VerticalAlignment="Center">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <!-- CENTER: [Prev] [Play/Pause] [Stop] [Next] + Song Info / Time + [Loop] [Fade] + Live [Key] & [BPM] -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                <!-- Transport Group: [Previous] [PLAY/PAUSE] [STOP] [Next] -->
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- Previous Track Button -->
+                    <Button
+                        Command="{x:Bind ViewModel.PreviousSongCommand, Mode=OneWay}"
+                        Width="36"
+                        Height="36"
+                        CornerRadius="18"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        ToolTipService.ToolTip="{x:Bind Strings.PreviousSongTooltip, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE892;" FontSize="13" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    </Button>
 
-                <!-- Song Info & Time -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <!-- Big Play / Pause Button -->
+                    <Button
+                        Command="{x:Bind ViewModel.TogglePlayPauseCommand, Mode=OneWay}"
+                        Width="50"
+                        Height="50"
+                        CornerRadius="25"
+                        Background="{x:Bind GetPlayPauseBrush(ViewModel.IsPlaying), Mode=OneWay}"
+                        BorderThickness="0"
+                        ToolTipService.ToolTip="{x:Bind Strings.PlayPauseTooltip, Mode=OneWay}">
+                        <FontIcon
+                            Glyph="{x:Bind GetPlayPauseGlyph(ViewModel.IsPlaying), Mode=OneWay}"
+                            FontSize="20"
+                            Foreground="#FFFFFF" />
+                    </Button>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <TextBlock
-                            Text="{x:Bind ViewModel.SongTitle, Mode=OneWay}"
-                            FontWeight="Bold"
-                            FontSize="15"
-                            Foreground="#F4F4F5" />
-                        <TextBlock
-                            Text="•"
-                            Foreground="#71717A" />
-                        <TextBlock
-                            Text="{x:Bind ViewModel.Artist, Mode=OneWay}"
-                            FontSize="13"
-                            Foreground="#A1A1AA"
-                            VerticalAlignment="Center" />
-                        <Border
-                            Background="#27272A"
-                            CornerRadius="4"
-                            Padding="6,2"
-                            Margin="8,0,0,0">
+                    <!-- Stop Button (Right next to Play) -->
+                    <Button
+                        Command="{x:Bind ViewModel.StopCommand, Mode=OneWay}"
+                        Width="42"
+                        Height="42"
+                        CornerRadius="21"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        ToolTipService.ToolTip="{x:Bind Strings.StopTooltip, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE71A;" FontSize="14" Foreground="#EF4444" />
+                    </Button>
+
+                    <!-- Next Track Button -->
+                    <Button
+                        Command="{x:Bind ViewModel.NextSongCommand, Mode=OneWay}"
+                        Width="36"
+                        Height="36"
+                        CornerRadius="18"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        ToolTipService.ToolTip="{x:Bind Strings.NextSongTooltip, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE893;" FontSize="13" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    </Button>
+                </StackPanel>
+
+                <!-- Current Playing Title & Album Cover in Center -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                    <Border
+                        Width="42"
+                        Height="42"
+                        CornerRadius="6"
+                        Background="{x:Bind ViewModel.CoverBrush, Mode=OneWay}">
+                        <Grid>
+                            <FontIcon
+                                Visibility="{x:Bind ViewModel.CoverIconVisibility, Mode=OneWay}"
+                                Glyph="&#xEC4F;"
+                                FontSize="18"
+                                Foreground="#FFFFFF" />
+                            <Image
+                                Visibility="{x:Bind ViewModel.CoverImageVisibility, Mode=OneWay}"
+                                Source="{x:Bind ViewModel.CoverImageSource, Mode=OneWay}"
+                                Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock
-                                Text="{x:Bind ViewModel.CurrentSectionName, Mode=OneWay}"
+                                Text="{x:Bind ViewModel.SongTitle, Mode=OneWay}"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                MaxWidth="180"
+                                TextTrimming="CharacterEllipsis" />
+                            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.CurrentSectionName, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="#0284C7" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock
+                                Text="{x:Bind ViewModel.CurrentTimeText, Mode=OneWay}"
+                                FontFamily="Consolas"
+                                FontWeight="Bold"
+                                FontSize="12"
+                                Foreground="#10B981" />
+                            <TextBlock
+                                Text="/"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.TotalDurationText, Mode=OneWay}"
+                                FontFamily="Consolas"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.LoopStatusText, Mode=OneWay}"
                                 FontSize="11"
-                                FontWeight="SemiBold"
-                                Foreground="#38BDF8" />
-                        </Border>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                        <TextBlock
-                            Text="{x:Bind ViewModel.CurrentTimeText, Mode=OneWay}"
-                            FontFamily="Consolas"
-                            FontWeight="Bold"
-                            FontSize="14"
-                            Foreground="#10B981" />
-                        <TextBlock
-                            Text="/"
-                            Foreground="#71717A" />
-                        <TextBlock
-                            Text="{x:Bind ViewModel.TotalDurationText, Mode=OneWay}"
-                            FontFamily="Consolas"
-                            FontSize="13"
-                            Foreground="#A1A1AA" />
-                    </StackPanel>
-                </Grid>
-
-                <!-- Scrubber Slider -->
-                <Slider
-                    Grid.Row="1"
-                    Minimum="0"
-                    Maximum="{x:Bind ViewModel.TotalDurationSeconds, Mode=OneWay}"
-                    Value="{x:Bind ViewModel.CurrentPositionSeconds, Mode=TwoWay}"
-                    Margin="0,4,0,0" />
-            </Grid>
-
-            <!-- RIGHT: Tempo (BPM), Key Transpose, Dynamic Pad & Master Vol -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-
-                <!-- BPM Box with +/- -->
-                <Border
-                    Background="#18181B"
-                    BorderBrush="#27272A"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="6,4">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Button
-                            Command="{x:Bind ViewModel.DecreaseBpmCommand, Mode=OneWay}"
-                            Width="26"
-                            Height="26"
-                            Padding="0"
-                            CornerRadius="13"
-                            Background="Transparent"
-                            BorderThickness="0">
-                            <FontIcon Glyph="&#xE738;" FontSize="10" Foreground="#A1A1AA" />
-                        </Button>
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MinWidth="48">
-                            <TextBlock
-                                Text="{x:Bind ViewModel.Bpm, Mode=OneWay}"
                                 FontWeight="Bold"
-                                FontSize="13"
-                                HorizontalAlignment="Center"
-                                Foreground="#F4F4F5" />
-                            <TextBlock
-                                Text="BPM"
-                                FontSize="9"
-                                Foreground="#71717A"
-                                HorizontalAlignment="Center" />
+                                Foreground="#10B981" />
                         </StackPanel>
-                        <Button
-                            Command="{x:Bind ViewModel.IncreaseBpmCommand, Mode=OneWay}"
-                            Width="26"
-                            Height="26"
-                            Padding="0"
-                            CornerRadius="13"
-                            Background="Transparent"
-                            BorderThickness="0">
-                            <FontIcon Glyph="&#xE710;" FontSize="10" Foreground="#A1A1AA" />
-                        </Button>
                     </StackPanel>
-                </Border>
+                </StackPanel>
 
-                <!-- Musical Key Transpose with +/- -->
-                <Border
-                    Background="#18181B"
-                    BorderBrush="#27272A"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="6,4">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Button
-                            Command="{x:Bind ViewModel.PitchDownCommand, Mode=OneWay}"
-                            Width="26"
-                            Height="26"
-                            Padding="0"
-                            CornerRadius="13"
-                            Background="Transparent"
-                            BorderThickness="0">
-                            <FontIcon Glyph="&#xE738;" FontSize="10" Foreground="#A1A1AA" />
-                        </Button>
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MinWidth="48">
-                            <TextBlock
-                                Text="{x:Bind ViewModel.KeyDisplay, Mode=OneWay}"
+                <!-- Loop & Fade Out + Live Key & BPM Controls to the right -->
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- Global Loop Toggle -->
+                    <ToggleButton
+                        IsChecked="{x:Bind ViewModel.IsLoopActive, Mode=TwoWay}"
+                        Width="36"
+                        Height="36"
+                        CornerRadius="6"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        ToolTipService.ToolTip="{x:Bind Strings.LoopSectionTooltip, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE8EE;" FontSize="14" Foreground="{x:Bind GetLoopForeground(ViewModel.IsLoopActive), Mode=OneWay}" />
+                    </ToggleButton>
+
+                    <!-- Fade Out Button -->
+                    <Button
+                        Command="{x:Bind ViewModel.FadeOutCommand, Mode=OneWay}"
+                        Width="40"
+                        Height="36"
+                        CornerRadius="6"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        ToolTipService.ToolTip="{x:Bind Strings.FadeOutTooltip, Mode=OneWay}">
+                        <Grid Width="20" Height="16">
+                            <Path
+                                Data="M 1,15 L 19,15 L 19,2 Z"
+                                Stroke="#F59E0B"
+                                StrokeThickness="1.5"
+                                Fill="#4D78350F"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Grid>
+                    </Button>
+
+                    <!-- Live Key (Pitch) Adjuster to the right of Loop & Fade Out -->
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Height="36"
+                        Padding="4,0"
+                        ToolTipService.ToolTip="Cambiar Tono (Key / Pitch) en Vivo">
+                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                            <Button
+                                Command="{x:Bind ViewModel.PitchDownCommand, Mode=OneWay}"
+                                Content="−"
                                 FontWeight="Bold"
-                                FontSize="13"
-                                HorizontalAlignment="Center"
-                                Foreground="#F4F4F5" />
-                            <TextBlock
-                                Text="KEY"
-                                FontSize="9"
-                                Foreground="#71717A"
-                                HorizontalAlignment="Center" />
+                                FontSize="12"
+                                Width="24"
+                                Height="26"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0" />
+                            <StackPanel VerticalAlignment="Center" MinWidth="36" Margin="2,0">
+                                <TextBlock
+                                    Text="KEY"
+                                    FontSize="8"
+                                    FontWeight="Bold"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    HorizontalAlignment="Center" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.KeyDisplay, Mode=OneWay}"
+                                    FontSize="12"
+                                    FontWeight="Bold"
+                                    Foreground="#0284C7"
+                                    HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <Button
+                                Command="{x:Bind ViewModel.PitchUpCommand, Mode=OneWay}"
+                                Content="+"
+                                FontWeight="Bold"
+                                FontSize="12"
+                                Width="24"
+                                Height="26"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0" />
                         </StackPanel>
-                        <Button
-                            Command="{x:Bind ViewModel.PitchUpCommand, Mode=OneWay}"
-                            Width="26"
-                            Height="26"
-                            Padding="0"
-                            CornerRadius="13"
-                            Background="Transparent"
-                            BorderThickness="0">
-                            <FontIcon Glyph="&#xE710;" FontSize="10" Foreground="#A1A1AA" />
-                        </Button>
-                    </StackPanel>
-                </Border>
+                    </Border>
 
-                <!-- Dynamic Ambient Pad Toggle Button -->
+                    <!-- Live BPM (Tempo) Adjuster to the right of Key -->
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Height="36"
+                        Padding="4,0"
+                        ToolTipService.ToolTip="Cambiar Tempo (BPM) en Vivo">
+                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                            <Button
+                                Command="{x:Bind ViewModel.DecreaseBpmCommand, Mode=OneWay}"
+                                Content="−"
+                                FontWeight="Bold"
+                                FontSize="12"
+                                Width="24"
+                                Height="26"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0" />
+                            <StackPanel VerticalAlignment="Center" MinWidth="36" Margin="2,0">
+                                <TextBlock
+                                    Text="BPM"
+                                    FontSize="8"
+                                    FontWeight="Bold"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    HorizontalAlignment="Center" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.Bpm, Mode=OneWay}"
+                                    FontSize="12"
+                                    FontWeight="Bold"
+                                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                    HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <Button
+                                Command="{x:Bind ViewModel.IncreaseBpmCommand, Mode=OneWay}"
+                                Content="+"
+                                FontWeight="Bold"
+                                FontSize="12"
+                                Width="24"
+                                Height="26"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- RIGHT: [EDIT (Only in Live, Left of Menu)] [Navigation Segmented Tabs] [STAGE] -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+
+                <!-- EDIT Button (Placed to the LEFT of the menu selector, visible ONLY in Live mode) -->
                 <ToggleButton
-                    IsChecked="{x:Bind ViewModel.IsPadActive, Mode=TwoWay}"
-                    Command="{x:Bind ViewModel.TogglePadCommand, Mode=OneWay}"
+                    x:Name="EditModeToggleBtn"
+                    Click="OnEditToggled"
+                    Content="{x:Bind Strings.EditButton, Mode=OneWay}"
+                    FontWeight="Bold"
+                    FontSize="12"
                     Height="36"
+                    Padding="12,0"
                     CornerRadius="6"
+                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" />
+
+                <!-- Navigation Segmented Tabs (Live / Setlist / Songs / Settings) -->
+                <Border
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="3">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <Button
+                            x:Name="NavLiveBtn"
+                            Click="OnNavLiveClicked"
+                            Content="{x:Bind Strings.NavLive, Mode=OneWay}"
+                            FontWeight="SemiBold"
+                            FontSize="12"
+                            Height="30"
+                            Padding="10,0"
+                            CornerRadius="6"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            BorderThickness="0" />
+                        <Button
+                            x:Name="NavSetlistBtn"
+                            Click="OnNavSetlistClicked"
+                            Content="{x:Bind Strings.NavSetlist, Mode=OneWay}"
+                            FontWeight="SemiBold"
+                            FontSize="12"
+                            Height="30"
+                            Padding="10,0"
+                            CornerRadius="6"
+                            Background="Transparent"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            BorderThickness="0" />
+                        <Button
+                            x:Name="NavSongsBtn"
+                            Click="OnNavSongsClicked"
+                            Content="{x:Bind Strings.NavSongs, Mode=OneWay}"
+                            FontWeight="SemiBold"
+                            FontSize="12"
+                            Height="30"
+                            Padding="10,0"
+                            CornerRadius="6"
+                            Background="Transparent"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            BorderThickness="0" />
+                        <Button
+                            x:Name="NavSettingsBtn"
+                            Click="OnNavSettingsClicked"
+                            Content="{x:Bind Strings.NavSettings, Mode=OneWay}"
+                            FontWeight="SemiBold"
+                            FontSize="12"
+                            Height="30"
+                            Padding="10,0"
+                            CornerRadius="6"
+                            Background="Transparent"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            BorderThickness="0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- STAGE VIEW (Fullscreen Toggle Button) -->
+                <ToggleButton
+                    x:Name="StageViewToggleBtn"
+                    Click="OnStageViewToggled"
+                    Height="36"
                     Padding="10,0"
-                    Background="{x:Bind ViewModel.IsPadActive, Mode=OneWay, Converter={StaticResource PadActiveColorConverter}}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <FontIcon Glyph="&#xEC15;" FontSize="12" Foreground="#FFFFFF" />
-                        <TextBlock Text="PAD" FontWeight="SemiBold" FontSize="11" Foreground="#FFFFFF" />
+                    CornerRadius="6"
+                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                    Foreground="#0284C7"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    ToolTipService.ToolTip="Modo Escenario (Pantalla Completa)">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon x:Name="StageViewIcon" Glyph="&#xE740;" FontSize="12" />
+                        <TextBlock Text="{x:Bind Strings.StageButton, Mode=OneWay}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" />
                     </StackPanel>
                 </ToggleButton>
-
-                <!-- Master Volume Slider -->
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE767;" FontSize="14" Foreground="#A1A1AA" />
-                    <Slider
-                        Minimum="0.0"
-                        Maximum="1.0"
-                        StepFrequency="0.01"
-                        Value="{x:Bind ViewModel.MasterVolume, Mode=TwoWay}"
-                        Width="80"
-                        VerticalAlignment="Center" />
-                </StackPanel>
             </StackPanel>
 
         </Grid>

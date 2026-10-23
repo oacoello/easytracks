@@ -50,10 +50,13 @@ public enum KeyScale
 
 public enum TransitionType
 {
-    Immediate,      // Play next song immediately upon completion
-    Crossfade,      // Crossfade audio into next song
-    PadContinuous,  // Pad stays running seamlessly into next song's key
-    ManualStop      // Wait for musician to press play
+    ManualStop,     // Se detiene al terminar la canción
+    Wait,           // Pasa a la siguiente canción en pausa
+    AutoPlay,       // Pasa a la siguiente canción y reproduce inmediatamente
+    Crossfade,      // Fundido cruzado / solapamiento
+    Hold,           // Pasa a la siguiente en pausa, sosteniendo Pad y Click en la nueva tonalidad
+    Immediate = AutoPlay,
+    PadContinuous = Hold
 }
 
 public enum SectionType
@@ -74,3 +77,10 @@ public enum SectionType
     Ending,
     Custom
 }
+
+public enum AudioRoutingMode
+{
+    Stereo2Ch,          // 2 Canales (Estéreo Normal o Split L: Click/Cues, R: Tracks)
+    Multichannel16Ch    // 16 Canales USB Directos (Mackie DL16S / Interfaz Multicanal)
+}
+

@@ -9,11 +9,19 @@ public enum PlaybackEngineState
     Paused
 }
 
-public record AudioDeviceInfo(int Id, string Name, bool IsDefault, int MaxChannels);
+public record AudioDeviceInfo(int Id, string Name, bool IsDefault, int MaxChannels, bool IsMackieConsole = false)
+{
+    public string DisplayName => IsMackieConsole
+        ? $"🎛️ {Name} (Consola 16-Ch USB)"
+        : $"{Name}{(IsDefault ? " [Predeterminado]" : "")}";
+}
 
 public interface IAudioEngine : IDisposable
 {
     bool IsInitialized { get; }
+    int CurrentDeviceIndex { get; }
+    event EventHandler<AudioDeviceInfo>? MackieConsoleConnected;
+
     void Initialize(int sampleRate = 44100, int deviceIndex = -1);
     IReadOnlyList<AudioDeviceInfo> GetOutputDevices();
     void SetOutputDevice(int deviceIndex);
@@ -27,6 +35,7 @@ public interface IPlaybackMixer : IDisposable
 
     event EventHandler<TimeSpan>? PositionChanged;
     event EventHandler<PlaybackEngineState>? StateChanged;
+    event EventHandler? TrackEnded;
 
     void LoadSong(Song song);
     void Play();
@@ -43,9 +52,14 @@ public interface IPlaybackMixer : IDisposable
     void SetStemPan(Guid stemId, float pan);
     void SetStemMute(Guid stemId, bool isMuted);
     void SetStemSolo(Guid stemId, bool isSolo);
+    void SetStemOutputBus(Guid stemId, int outputBusIndex);
     
     // Master controls
     void SetMasterVolume(float volume);
+
+    // VU Meters
+    float GetStemPeakLevel(Guid stemId);
+    (float Left, float Right) GetMasterPeakLevel();
 }
 
 public interface IPadPlayer : IDisposable

@@ -12,7 +12,10 @@ public class Song
     public int KeySemitoneOffset { get; set; } = 0; // -12 to +12 semitones
     public int TimeSignatureNumerator { get; set; } = 4;
     public int TimeSignatureDenominator { get; set; } = 4;
+    public string Album { get; set; } = string.Empty;
+    public string? CoverUrl { get; set; }
     public TimeSpan Duration { get; set; }
+    public string? SourceDirectory { get; set; }
 
     public List<StemTrack> Stems { get; set; } = new();
     public List<Arrangement> Arrangements { get; set; } = new();

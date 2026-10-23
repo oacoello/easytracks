@@ -60,6 +60,12 @@
     <ProjectReference Include="..\EasyTracks.Core\EasyTracks.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\localization.json" Link="localization.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(NuGetPackageRoot)bass.native\2.4.13.10\build\native\x64\*.dll" Link="%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(NuGetPackageRoot)bass.native\2.4.13.10\build\native\x64\Addon\*.dll" Link="%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
     Explorer "Package and Publish" context menu entry to be enabled for this project even if
@@ -76,4 +82,16 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
+
+  <!-- Hook WinApp CLI launcher for 'dotnet run' on .NET 8 SDK -->
+  <PropertyGroup Condition="'$(EnableWinAppRunSupport)' != 'false' and '$(WindowsPackageType)' != 'None'">
+    <RunCommand>$(WinAppCliPath)</RunCommand>
+    <RunArguments>run "bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" --manifest "bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppxManifest.xml" --output-appx-directory "bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppX" --project-framework winui --caller nuget-package --</RunArguments>
+    <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+  </PropertyGroup>
+
+  <Target Name="_WinAppStageLooseLayoutOnBuild"
+          AfterTargets="Build"
+          DependsOnTargets="_WinAppCopyContentToLooseLayout"
+          Condition="'$(_WinAppRunSupportActive)' == 'true'" />
 </Project>

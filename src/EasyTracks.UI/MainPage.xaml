@@ -7,166 +7,1124 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:EasyTracks_UI.Controls"
     xmlns:vm="using:EasyTracks_UI.ViewModels"
+    xmlns:models="using:EasyTracks.Domain.Models"
     mc:Ignorable="d"
-    Background="#09090B">
+    Background="Transparent">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Page.Resources>
+        <MenuFlyout x:Name="TransitionPickerFlyout">
+            <MenuFlyoutItem Text="⏹ Stop (Detener al finalizar)" Tag="ManualStop" Click="OnSelectTransitionTypeClicked" />
+            <MenuFlyoutItem Text="⏸ Wait (Avanzar a la siguiente en pausa)" Tag="Wait" Click="OnSelectTransitionTypeClicked" />
+            <MenuFlyoutItem Text="▶ Auto-Play (Reproducir siguiente directo)" Tag="AutoPlay" Click="OnSelectTransitionTypeClicked" />
+            <MenuFlyoutItem Text="🔀 Crossfade (Fundido cruzado / Overlap)" Tag="Crossfade" Click="OnSelectTransitionTypeClicked" />
+            <MenuFlyoutItem Text="⚓ Hold (Avanzar y sostener Pad + Click)" Tag="Hold" Click="OnSelectTransitionTypeClicked" />
+        </MenuFlyout>
+    </Page.Resources>
 
-        <!-- ROW 0: Transport & Master Bar -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ROW 0: Multitracks Playback Top Transport & Navigation Bar -->
         <controls:TransportBarControl
+            x:Name="TopTransportBar"
             Grid.Row="0"
-            ViewModel="{x:Bind ViewModel.Transport, Mode=OneWay}" />
+            ViewModel="{x:Bind ViewModel.Transport, Mode=OneWay}"
+            NavSelected="OnNavSelected"
+            EditToggled="OnEditToggled" />
 
-        <!-- ROW 1: Setlist Songs Carousel (Album Art + Name + BPM + Key) -->
-        <Border
-            Grid.Row="1"
-            Background="#0E0E11"
-            BorderBrush="#27272A"
-            BorderThickness="0,0,0,1"
-            Padding="16,8">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.SetlistSongs, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:SongItemViewModel">
-                            <controls:SetlistCardControl
-                                ViewModel="{x:Bind}"
-                                CardClicked="OnSetlistCardClicked" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
+        <!-- ROW 1: Main Content Area (Live vs Setlist vs Songs vs Settings) -->
+        <Grid Grid.Row="1">
 
-        <!-- ROW 2: Arrangement Timeline with Soundwaves (Intro, Verse, Chorus, etc.) -->
-        <Border
-            Grid.Row="2"
-            Background="#121214"
-            BorderBrush="#27272A"
-            BorderThickness="0,0,0,1"
-            Padding="16,8">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.ActiveSections, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="4" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:SectionWaveformViewModel">
-                            <controls:WaveformSectionControl ViewModel="{x:Bind}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
+            <!-- TAB 1: LIVE VIEW (Setlist Carousel, Waveform Ribbon, 2-Row Mixer & Buses, PAD Dock) -->
+            <Grid x:Name="LiveViewGrid" RowDefinitions="Auto,Auto,*,Auto" Visibility="Visible">
 
-        <!-- ROW 3: Stem Channel Rack + Master Strip -->
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="12,8,12,12">
+                <!-- 1.1 Setlist Songs Carousel with Drag & Drop Reordering and Add Song Card -->
+                <Border
+                    Grid.Row="0"
+                    Background="Transparent"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="16,8">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <!-- Reorderable Setlist Items -->
+                            <ListView
+                                ItemsSource="{x:Bind ViewModel.SetlistSongs, Mode=OneWay}"
+                                CanReorderItems="True"
+                                CanDragItems="True"
+                                AllowDrop="True"
+                                DragItemsCompleted="OnSetlistDragItemsCompleted"
+                                SelectionMode="None">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <ItemsStackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SongItemViewModel">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:SetlistCardControl
+                                                ViewModel="{x:Bind}"
+                                                CardClicked="OnSetlistCardClicked"
+                                                DeleteClicked="OnSetlistCardDeleteClicked" />
 
-            <!-- Horizontal Scrollable Stems Rack -->
-            <ScrollViewer
-                Grid.Column="0"
-                HorizontalScrollBarVisibility="Auto"
-                VerticalScrollBarVisibility="Disabled"
-                Padding="0,0,12,0">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Channels, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="4" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:StemChannelViewModel">
-                            <controls:StemChannelStripControl ViewModel="{x:Bind}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                                            <!-- Transition Connector Button between songs -->
+                                            <Button
+                                                Click="OnTransitionButtonClicked"
+                                                Margin="4,0,4,0"
+                                                Padding="0"
+                                                Width="30"
+                                                Height="30"
+                                                CornerRadius="15"
+                                                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                BorderBrush="{x:Bind TransitionBorderBrush, Mode=OneWay}"
+                                                BorderThickness="1.5"
+                                                ToolTipService.ToolTip="{x:Bind TransitionTooltip, Mode=OneWay}">
+                                                <FontIcon Glyph="{x:Bind TransitionGlyph, Mode=OneWay}" FontSize="12" Foreground="{x:Bind TransitionForeground, Mode=OneWay}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
 
-            <!-- Master Fader Strip (Pinned on the Right) -->
-            <Border
-                Grid.Column="1"
-                Background="#18181B"
-                BorderBrush="#27272A"
-                BorderThickness="1"
-                CornerRadius="8"
-                Width="92"
-                Padding="8">
-                <Grid RowDefinitions="Auto,*,Auto,Auto">
-                    <StackPanel Grid.Row="0" Spacing="2">
-                        <TextBlock
-                            Text="MASTER"
-                            FontWeight="Bold"
-                            FontSize="12"
-                            Foreground="#F4F4F5"
-                            HorizontalAlignment="Center" />
-                        <TextBlock
-                            Text="MAIN L/R"
-                            FontSize="9"
-                            Foreground="#A1A1AA"
-                            HorizontalAlignment="Center" />
-                    </StackPanel>
+                            <!-- "+ Agregar Canción" Card (Visible when EDIT mode is active) -->
+                            <Button
+                                Click="OnAddSongInEditModeClicked"
+                                Visibility="{x:Bind ViewModel.IsEditMode, Mode=OneWay}"
+                                Width="140"
+                                Height="84"
+                                CornerRadius="10"
+                                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                BorderBrush="{StaticResource AppAccentBrush}"
+                                BorderThickness="1"
+                                Margin="4,0,12,0"
+                                ToolTipService.ToolTip="Añadir una canción al setlist">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                                    <FontIcon Glyph="&#xE710;" FontSize="20" Foreground="{StaticResource AppAccentBrush}" />
+                                    <TextBlock Text="+ Agregar Canción" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
 
-                    <!-- Master Fader & Master Meter -->
-                    <Grid Grid.Row="1" ColumnDefinitions="*,12" Margin="0,8">
-                        <Slider
+                <!-- 1.2 Arrangement Timeline with Soundwaves & Interactive Arrangement/Markers Editor -->
+                <Border
+                    Grid.Row="1"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="16,8">
+                    <Grid RowDefinitions="Auto,Auto,*">
+                        <!-- Arrangement Header & Quick Controls -->
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,6">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE8FD;" FontSize="12" Foreground="#0284C7" />
+                                <TextBlock Text="{x:Bind ViewModel.Strings.ArrangementHeader, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedSectionBarsText, Mode=OneWay}" FontSize="10" FontFamily="Consolas" Foreground="#0284C7" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <!-- 3 Soundwave Zoom Presets: x1 (Full Width), x2, x3 -->
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="4,1">
+                                    <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="Zoom:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <ToggleButton
+                                            IsChecked="{x:Bind ViewModel.IsZoom1x, Mode=OneWay}"
+                                            Command="{x:Bind ViewModel.SetZoom1xCommand, Mode=OneWay}"
+                                            Content="x1"
+                                            Height="22"
+                                            MinWidth="32"
+                                            Padding="6,0"
+                                            CornerRadius="3"
+                                            FontSize="10"
+                                            FontWeight="Bold"
+                                            ToolTipService.ToolTip="Zoom x1: Ajustar el soundwave completo al ancho de la pantalla" />
+                                        <ToggleButton
+                                            IsChecked="{x:Bind ViewModel.IsZoom2x, Mode=OneWay}"
+                                            Command="{x:Bind ViewModel.SetZoom2xCommand, Mode=OneWay}"
+                                            Content="x2"
+                                            Height="22"
+                                            MinWidth="32"
+                                            Padding="6,0"
+                                            CornerRadius="3"
+                                            FontSize="10"
+                                            FontWeight="Bold"
+                                            ToolTipService.ToolTip="Zoom x2: Expandir soundwave al doble de ancho para scroll detallado" />
+                                        <ToggleButton
+                                            IsChecked="{x:Bind ViewModel.IsZoom3x, Mode=OneWay}"
+                                            Command="{x:Bind ViewModel.SetZoom3xCommand, Mode=OneWay}"
+                                            Content="x3"
+                                            Height="22"
+                                            MinWidth="32"
+                                            Padding="6,0"
+                                            CornerRadius="3"
+                                            FontSize="10"
+                                            FontWeight="Bold"
+                                            ToolTipService.ToolTip="Zoom x3: Máximo acercamiento por compases" />
+                                    </StackPanel>
+                                </Border>
+
+                                <ToggleButton
+                                    IsChecked="{x:Bind ViewModel.IsSnapToGridEnabled, Mode=TwoWay}"
+                                    Height="26"
+                                    Padding="8,0"
+                                    CornerRadius="4"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    ToolTipService.ToolTip="Cuantización magnética por compases y BPM (Snap to Grid)">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <FontIcon Glyph="&#xE809;" FontSize="11" Foreground="#10B981" />
+                                        <TextBlock Text="{x:Bind ViewModel.Strings.SnapBarButton, Mode=OneWay}" />
+                                    </StackPanel>
+                                </ToggleButton>
+
+                                <ToggleButton
+                                    IsChecked="{x:Bind ViewModel.IsArrangementEditMode, Mode=TwoWay}"
+                                    Height="26"
+                                    Padding="10,0"
+                                    CornerRadius="4"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    Foreground="#0284C7"
+                                    ToolTipService.ToolTip="Abrir barra de edición interactiva de secciones y marcadores (o clic derecho sobre el soundwave para insertar en un compás exacto)">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <FontIcon Glyph="&#xE70F;" FontSize="11" />
+                                        <TextBlock Text="{x:Bind ViewModel.Strings.EditSectionsButton, Mode=OneWay}" />
+                                    </StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Interactive Arrangement Editor Toolbar (Collapsible) -->
+                        <Border
+                            Grid.Row="1"
+                            Visibility="{x:Bind ViewModel.ArrangementEditorVisibility, Mode=OneWay}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10,6"
+                            Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Sección:" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBox
+                                    x:Name="SectionRenameTextBox"
+                                    Text="{x:Bind ViewModel.SelectedSectionNameText, Mode=OneWay}"
+                                    Width="130"
+                                    Height="28"
+                                    FontSize="11"
+                                    PlaceholderText="Nombre (ej. CORO)" />
+                                <Button
+                                    Click="OnApplySectionRenameClicked"
+                                    Content="{x:Bind ViewModel.Strings.RenameSectionButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Height="28"
+                                    Padding="10,0"
+                                    CornerRadius="4" />
+
+                                <Border Width="1" Height="20" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,0" />
+
+                                <TextBlock Text="Extremos (Snap):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <Button
+                                    Command="{x:Bind ViewModel.ShrinkSelectedSectionBarCommand, Mode=OneWay}"
+                                    Content="-1 Compás"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="8,0"
+                                    CornerRadius="4" />
+                                <Button
+                                    Command="{x:Bind ViewModel.ExpandSelectedSectionBarCommand, Mode=OneWay}"
+                                    Content="+1 Compás"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="8,0"
+                                    CornerRadius="4" />
+
+                                <Border Width="1" Height="20" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,0" />
+
+                                <Button
+                                    Command="{x:Bind ViewModel.SplitSelectedSectionCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.SplitSectionButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="10,0"
+                                    CornerRadius="4"
+                                    Foreground="#0284C7" />
+                                <Button
+                                    Command="{x:Bind ViewModel.AddSectionAfterSelectedCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.AddMarkerButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="10,0"
+                                    CornerRadius="4"
+                                    Foreground="#10B981" />
+                                <Button
+                                    Command="{x:Bind ViewModel.DeleteSelectedSectionCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.RemoveMarkerButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="10,0"
+                                    CornerRadius="4"
+                                    Foreground="#EF4444" />
+                                <Button
+                                    Click="OnResetSectionsToSingleSpanClicked"
+                                    Content="🧹 Sin Secciones"
+                                    FontSize="10"
+                                    Height="28"
+                                    Padding="10,0"
+                                    CornerRadius="4"
+                                    ToolTipService.ToolTip="Dejar el soundwave limpio sin divisiones para ir marcando secciones haciendo clic derecho en cualquier compás" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Horizontal Scrollable Waveform Sections Ribbon -->
+                        <ScrollViewer
+                            Grid.Row="2"
+                            x:Name="WaveformScrollViewer"
+                            SizeChanged="OnWaveformScrollViewerSizeChanged"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Disabled">
+                            <Grid x:Name="WaveformTrackGrid" PointerPressed="OnWaveformTrackPointerPressed">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.ActiveSections, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="0" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SectionWaveformViewModel">
+                                            <controls:WaveformSectionControl ViewModel="{x:Bind}" SeekRequested="OnWaveformSectionSeekRequested" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Playhead Line inside scroll content for accurate synchronization -->
+                                <Canvas IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <Border
+                                        x:Name="PlayheadLine"
+                                        Width="3"
+                                        Height="100"
+                                        Background="#10B981"
+                                        BorderBrush="#FFFFFF"
+                                        BorderThickness="0.5"
+                                        HorizontalAlignment="Left" />
+                                </Canvas>
+                            </Grid>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- 1.3 Instrument Buses Bar + Stem Channel Mixer Rack (Responsive 2-Row Grid) + Master Strip -->
+                <Grid Grid.Row="2" RowDefinitions="Auto,*" ColumnDefinitions="*,Auto" Margin="12,4,12,4">
+
+                    <!-- Instrument Buses Summary Toolbar (Top of Mixer) -->
+                    <Border
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10,6"
+                        Margin="0,0,0,6">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE93C;" FontSize="13" Foreground="{StaticResource AppAccentBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.Strings.BusesAndRoutingLabel, Mode=OneWay}" FontWeight="Bold" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- Bus Mute Chips + Bus Output Selector (Drums, Guitars, Keys, Vocals) -->
+                            <ItemsControl Grid.Column="1" ItemsSource="{x:Bind ViewModel.InstrumentBuses, Mode=OneWay}" Margin="10,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:InstrumentBusViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="2">
+                                            <ToggleButton
+                                                IsChecked="{x:Bind IsMuted, Mode=TwoWay}"
+                                                Height="28"
+                                                CornerRadius="6,0,0,6"
+                                                Padding="10,0"
+                                                BorderThickness="1"
+                                                BorderBrush="{x:Bind BusBrush, Mode=OneWay}"
+                                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Border Width="8" Height="8" CornerRadius="4" Background="{x:Bind BusBrush, Mode=OneWay}" />
+                                                    <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </StackPanel>
+                                            </ToggleButton>
+                                            <Button
+                                                Click="OnInstrumentBusOutputClicked"
+                                                Content="{x:Bind OutputBusText, Mode=OneWay}"
+                                                Height="28"
+                                                Padding="6,0"
+                                                FontSize="9"
+                                                FontWeight="SemiBold"
+                                                CornerRadius="0,6,6,0"
+                                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                Foreground="#0284C7"
+                                                BorderBrush="{x:Bind BusBrush, Mode=OneWay}"
+                                                BorderThickness="0,1,1,1"
+                                                ToolTipService.ToolTip="Asignar salida USB/Split a todo este bus" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Mackie 16Ch / 2Ch Split Quick Presets + Clear all mutes / solos -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                                <Button
+                                    Command="{x:Bind ViewModel.ApplyMackie16ChPresetCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.Mackie16ChButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Height="26"
+                                    Padding="8,0"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    Foreground="#0284C7"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    ToolTipService.ToolTip="Auto-asignar Stems a los 16 canales USB de la Mackie DL16S (Click Ch1, Guide Ch2, Stems Ch3-16)" />
+                                <Button
+                                    Command="{x:Bind ViewModel.ApplySplit2ChPresetCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.Split2ChButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Height="26"
+                                    Padding="8,0"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    Foreground="#9333EA"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    ToolTipService.ToolTip="Modo 2 Canales: Click y Guía a L (In-Ears) y Stems a R (FOH)" />
+                                <Button
+                                    Command="{x:Bind ViewModel.ClearAllMutesCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.UnmuteAllButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    Height="26"
+                                    Padding="8,0"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    Foreground="#EF4444"
+                                    BorderThickness="0" />
+                                <Button
+                                    Command="{x:Bind ViewModel.ClearAllSolosCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.ClearSoloButton, Mode=OneWay}"
+                                    FontSize="10"
+                                    Height="26"
+                                    Padding="8,0"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    Foreground="#EAB308"
+                                    BorderThickness="0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Scrollable Stems Rack (Supports 2-Row Grid / Wrap with smooth horizontal sideways scrolling) -->
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled"
+                        Padding="0,0,12,0">
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Channels, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <!-- VariableSizedWrapGrid Multi-Row Faders that stretch horizontally sideways -->
+                                    <VariableSizedWrapGrid Orientation="Vertical" MaximumRowsOrColumns="2" ItemWidth="96" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:StemChannelViewModel">
+                                    <controls:StemChannelStripControl ViewModel="{x:Bind}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Master Fader Strip (Pinned on the Right) -->
+                    <Border
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Width="92"
+                        Padding="6,6">
+                        <Grid RowDefinitions="Auto,*,Auto,Auto">
+                            <StackPanel Grid.Row="0" Spacing="2">
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.Strings.MasterLabel, Mode=OneWay}"
+                                    FontWeight="Bold"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                    HorizontalAlignment="Center" />
+                                <TextBlock
+                                    Text="MAIN L/R"
+                                    FontSize="9"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    HorizontalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- Master Fader & Master Meter (Compact 115px) -->
+                            <Grid Grid.Row="1" ColumnDefinitions="*,10" Margin="0,4">
+                                <Slider
+                                    Grid.Column="0"
+                                    Orientation="Vertical"
+                                    Minimum="0.0"
+                                    Maximum="1.0"
+                                    StepFrequency="0.01"
+                                    Value="{x:Bind ViewModel.Transport.MasterVolume, Mode=TwoWay}"
+                                    DoubleTapped="OnMasterSliderDoubleTapped"
+                                    ToolTipService.ToolTip="Doble clic para regresar a Volumen 1"
+                                    HorizontalAlignment="Center"
+                                    Height="115" />
+
+                                <!-- Master Stereo VU Meter -->
+                                <Border
+                                    Grid.Column="1"
+                                    Background="{ThemeResource ControlStrongStrokeColorDisabledBrush}"
+                                    CornerRadius="3"
+                                    Width="6"
+                                    Height="115"
+                                    VerticalAlignment="Center">
+                                    <Grid VerticalAlignment="Bottom">
+                                        <Border
+                                            Background="#10B981"
+                                            CornerRadius="3"
+                                            Width="6"
+                                            Height="{x:Bind ViewModel.Transport.MasterMeterHeight, Mode=OneWay}" />
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Mute / Solo Global Clear Controls -->
+                            <Button
+                                Grid.Row="2"
+                                Content="{x:Bind ViewModel.Strings.UnmuteAllButton, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.ClearAllMutesCommand, Mode=OneWay}"
+                                FontSize="10"
+                                HorizontalAlignment="Stretch"
+                                Height="22"
+                                Padding="0"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                Foreground="#EF4444"
+                                Margin="0,0,0,3" />
+
+                            <Button
+                                Grid.Row="3"
+                                Content="{x:Bind ViewModel.Strings.ClearSoloButton, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.ClearAllSolosCommand, Mode=OneWay}"
+                                FontSize="10"
+                                HorizontalAlignment="Stretch"
+                                Height="22"
+                                Padding="0"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                Foreground="#EAB308" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 1.4 DEDICATED BOTTOM PAD PLAYER DOCK (High Visibility Live Key Crossfader) -->
+                <Border
+                    Grid.Row="3"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="16,8">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
+
+                        <!-- Main PAD Big Trigger (Accent Glow) -->
+                        <ToggleButton
+                            x:Name="PadDockToggleBtn"
                             Grid.Column="0"
-                            Orientation="Vertical"
-                            Minimum="0.0"
-                            Maximum="1.0"
-                            StepFrequency="0.01"
-                            Value="{x:Bind ViewModel.Transport.MasterVolume, Mode=TwoWay}"
-                            HorizontalAlignment="Center"
-                            Height="210" />
+                            IsChecked="{x:Bind ViewModel.Transport.IsPadActive, Mode=TwoWay}"
+                            Click="OnPadDockToggleClicked"
+                            Height="40"
+                            CornerRadius="8"
+                            Padding="16,0"
+                            Background="#9333EA"
+                            BorderThickness="0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xEC15;" FontSize="15" Foreground="#FFFFFF" />
+                                <TextBlock Text="{x:Bind ViewModel.Strings.AmbientPadButton, Mode=OneWay}" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF" />
+                            </StackPanel>
+                        </ToggleButton>
 
-                        <!-- Master Stereo VU Meter -->
+                        <!-- Persistent Pad Volume Slider -->
                         <Border
                             Grid.Column="1"
-                            Background="#27272A"
-                            CornerRadius="3"
-                            Width="8"
-                            Height="210"
-                            VerticalAlignment="Center">
-                            <Grid VerticalAlignment="Bottom">
-                                <Border
-                                    Background="#10B981"
-                                    CornerRadius="3"
-                                    Width="8"
-                                    Height="140" />
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10,4"
+                            Margin="10,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE767;" FontSize="13" Foreground="#9333EA" VerticalAlignment="Center" />
+                                <Slider
+                                    Width="110"
+                                    Minimum="0.0"
+                                    Maximum="1.0"
+                                    StepFrequency="0.01"
+                                    Value="{x:Bind ViewModel.Transport.PadVolume, Mode=TwoWay}"
+                                    DoubleTapped="OnPadVolumeSliderDoubleTapped"
+                                    VerticalAlignment="Center"
+                                    ToolTipService.ToolTip="Volumen del Pad Ambiental (se guarda automáticamente en memoria). Doble clic para 75%" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.Transport.PadVolumePercentText, Mode=OneWay}"
+                                    FontSize="11"
+                                    FontWeight="Bold"
+                                    FontFamily="Consolas"
+                                    Width="34"
+                                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Active PAD Key Indicator -->
+                        <Border
+                            Grid.Column="2"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,4"
+                            Margin="10,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.Strings.PadKeyLabel, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.Transport.PadKeyDisplay, Mode=OneWay}"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="#0284C7"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Key Quick Selector Chips (C, C#, D, D#, E, F, F#, G, G#, A, A#, B) -->
+                        <ScrollViewer Grid.Column="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="12,0">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Click="OnKeyChipClicked" Tag="C" Content="C" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="CSharp" Content="C#" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="D" Content="D" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="DSharp" Content="D#" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="E" Content="E" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="F" Content="F" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="FSharp" Content="F#" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="G" Content="G" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="GSharp" Content="G#" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="A" Content="A" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="ASharp" Content="A#" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                                <Button Click="OnKeyChipClicked" Tag="B" Content="B" FontWeight="Bold" FontSize="12" Width="40" Height="36" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Configurable Pad Transition Time (Seconds) -->
+                        <Border
+                            Grid.Column="4"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10,2"
+                            Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.Strings.CrossfadeLabel, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <NumberBox
+                                    Value="{x:Bind ViewModel.Transport.PadTransitionSeconds, Mode=TwoWay}"
+                                    Minimum="0.5"
+                                    Maximum="15.0"
+                                    SpinButtonPlacementMode="Compact"
+                                    SmallChange="0.5"
+                                    Width="82"
+                                    Height="32"
+                                    VerticalAlignment="Center" />
+                                <TextBlock Text="seg" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Pad Nudge +/- Buttons -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Button
+                                Command="{x:Bind ViewModel.Transport.PreviousPadKeyCommand, Mode=OneWay}"
+                                Content="&#xE738;"
+                                FontFamily="Segoe Fluent Icons"
+                                Width="34"
+                                Height="34"
+                                CornerRadius="6"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1" />
+                            <Button
+                                Command="{x:Bind ViewModel.Transport.NextPadKeyCommand, Mode=OneWay}"
+                                Content="&#xE710;"
+                                FontFamily="Segoe Fluent Icons"
+                                Width="34"
+                                Height="34"
+                                CornerRadius="6"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+            </Grid>
+
+            <!-- TAB 2: SETLIST VIEW (Dedicated Setlist Management, Name & Date Configuration) -->
+            <Grid x:Name="SetlistViewGrid" Visibility="Collapsed" Padding="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,20">
+                    <TextBlock Text="{x:Bind ViewModel.Strings.SetlistTitle, Mode=OneWay}" FontSize="24" FontWeight="Bold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.Strings.SetlistSubtitle, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="20">
+                    <!-- Left: All Setlists Column -->
+                    <Border Grid.Column="0" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+                            <TextBlock Grid.Row="0" Text="{x:Bind ViewModel.Strings.SavedSetlistsHeader, Mode=OneWay}" FontWeight="Bold" FontSize="15" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            
+                            <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.SetlistManager.AllSetlists, Mode=OneWay}" SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Setlist">
+                                        <Grid Margin="0,4" ColumnDefinitions="*,Auto">
+                                            <Button Grid.Column="0" Click="OnSelectSetlistClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                    <TextBlock Text="{x:Bind SummaryText}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Grid.Column="1" Click="OnDeleteSetlistClicked" Content="&#xE74D;" FontFamily="Segoe Fluent Icons" Width="30" Height="30" CornerRadius="6" Background="Transparent" Foreground="#EF4444" BorderThickness="0" ToolTipService.ToolTip="Eliminar este setlist" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <Button Grid.Row="2" Click="OnCreateNewSetlistClicked" Content="{x:Bind ViewModel.Strings.NewSetlistButton, Mode=OneWay}" Style="{StaticResource AccentButtonStyle}" FontWeight="Bold" HorizontalAlignment="Stretch" Height="36" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Right: Selected Setlist Details & Songs -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+                        <!-- Setlist Meta Form (Name & Date) -->
+                        <Border Grid.Row="0" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,16,0">
+                                    <TextBlock Text="{x:Bind ViewModel.Strings.SelectedSetlistNameLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBox Text="{x:Bind ViewModel.SetlistManager.SetlistName, Mode=TwoWay}" PlaceholderText="Ej: Servicio Domingo 10:00 AM" Height="36" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6" Margin="0,0,16,0">
+                                    <TextBlock Text="{x:Bind ViewModel.Strings.SetlistDateLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <DatePicker Date="{x:Bind ViewModel.SetlistManager.SetlistDate, Mode=TwoWay}" Height="36" />
+                                </StackPanel>
+
+                                <Button
+                                    Grid.Column="2"
+                                    Click="OnSaveSetlistMetaClicked"
+                                    Content="{x:Bind ViewModel.Strings.SaveChangesButton, Mode=OneWay}"
+                                    FontWeight="SemiBold"
+                                    Height="36"
+                                    VerticalAlignment="Bottom"
+                                    Padding="16,0" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Current Setlist Songs Table -->
+                        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0" Text="{x:Bind ViewModel.Strings.SongsInSetlistHeader, Mode=OneWay}" FontWeight="Bold" FontSize="15" Margin="0,0,0,12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                                <ListView
+                                    Grid.Row="1"
+                                    ItemsSource="{x:Bind ViewModel.SetlistSongs, Mode=OneWay}"
+                                    CanReorderItems="True"
+                                    CanDragItems="True"
+                                    AllowDrop="True"
+                                    DragItemsCompleted="OnSetlistDragItemsCompleted">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SongItemViewModel">
+                                            <Grid Margin="0,6" ColumnDefinitions="Auto,*,Auto,Auto">
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6" Background="{x:Bind CoverBrush, Mode=OneWay}">
+                                                    <Grid>
+                                                        <FontIcon Visibility="{x:Bind CoverIconVisibility, Mode=OneWay}" Glyph="&#xEC4F;" FontSize="16" Foreground="#FFFFFF" />
+                                                        <Image Visibility="{x:Bind CoverImageVisibility, Mode=OneWay}" Source="{x:Bind CoverImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                                                    </Grid>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" FontWeight="Bold" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                    <TextBlock Text="{x:Bind Artist, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,24,0">
+                                                    <TextBlock Text="{x:Bind KeyDisplay, Mode=OneWay}" FontWeight="SemiBold" FontSize="13" Foreground="#0284C7" />
+                                                    <TextBlock Text="{x:Bind DurationText, Mode=OneWay}" FontFamily="Consolas" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Click="OnRemoveSongFromListClicked"
+                                                    Content="&#xE74D;"
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    Width="32"
+                                                    Height="32"
+                                                    CornerRadius="6"
+                                                    Background="Transparent"
+                                                    Foreground="#EF4444"
+                                                    BorderThickness="0"
+                                                    ToolTipService.ToolTip="Eliminar del setlist" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
                             </Grid>
                         </Border>
                     </Grid>
-
-                    <!-- Mute / Solo Global Clear Controls -->
-                    <Button
-                        Grid.Row="2"
-                        Content="Clear Mute"
-                        Command="{x:Bind ViewModel.ClearAllMutesCommand, Mode=OneWay}"
-                        FontSize="10"
-                        HorizontalAlignment="Stretch"
-                        Height="24"
-                        Padding="0"
-                        Background="#27272A"
-                        Foreground="#EF4444"
-                        Margin="0,0,0,4" />
-
-                    <Button
-                        Grid.Row="3"
-                        Content="Clear Solo"
-                        Command="{x:Bind ViewModel.ClearAllSolosCommand, Mode=OneWay}"
-                        FontSize="10"
-                        HorizontalAlignment="Stretch"
-                        Height="24"
-                        Padding="0"
-                        Background="#27272A"
-                        Foreground="#EAB308" />
                 </Grid>
-            </Border>
+            </Grid>
+
+            <!-- TAB 3: SONGS VIEW (Local Audio Stems Import, Search Bar & Multi-Column Table) -->
+            <Grid x:Name="SongsViewGrid" Visibility="Collapsed" Padding="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                    <TextBlock Text="{x:Bind ViewModel.Strings.SongsLibraryTitle, Mode=OneWay}" FontSize="24" FontWeight="Bold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.Strings.SongsLibrarySubtitle, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <!-- Top Toolbar: Search Bar + Import Folder + Configure Metadata -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Margin="0,10,0,0">
+                        <TextBox
+                            Grid.Column="0"
+                            Text="{x:Bind ViewModel.SongSearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            PlaceholderText="{x:Bind ViewModel.Strings.SearchSongsPlaceholder, Mode=OneWay}"
+                            Height="38"
+                            VerticalContentAlignment="Center" />
+
+                        <Button
+                            Grid.Column="1"
+                            Click="OnImportFolderClicked"
+                            Content="{x:Bind ViewModel.Strings.ImportFolderButton, Mode=OneWay}"
+                            Style="{StaticResource AccentButtonStyle}"
+                            FontWeight="Bold"
+                            Height="38"
+                            Padding="16,0"
+                            CornerRadius="6" />
+
+                        <Button
+                            Grid.Column="2"
+                            Click="OnConfigureCurrentSongClicked"
+                            FontWeight="SemiBold"
+                            Height="38"
+                            Padding="14,0"
+                            CornerRadius="6"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            Foreground="#0284C7">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE713;" FontSize="13" Foreground="#0284C7" />
+                                <TextBlock Text="{x:Bind ViewModel.Strings.ConfigureMetadataButton, Mode=OneWay}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Multi-Column Songs Library Table -->
+                <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Column Header Row -->
+                        <Border
+                            Grid.Row="0"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            CornerRadius="6"
+                            Padding="14,8"
+                            Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="50,2.2*,1.5*,1.4*,80,80,80,85,115">
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Strings.ColTitle, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.Strings.ColArtist, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Grid.Column="3" Text="{x:Bind ViewModel.Strings.ColArrangement, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Grid.Column="4" Text="{x:Bind ViewModel.Strings.ColKey, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Text="{x:Bind ViewModel.Strings.ColBpm, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="6" Text="{x:Bind ViewModel.Strings.ColTimeSig, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="7" Text="{x:Bind ViewModel.Strings.ColDuration, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="8" Text="{x:Bind ViewModel.Strings.ColActions, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Songs Rows -->
+                        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.FilteredLibrarySongs, Mode=OneWay}" SelectionMode="None">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="6,4" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SongItemViewModel">
+                                    <Border
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="8,6">
+                                        <Grid ColumnDefinitions="50,2.2*,1.5*,1.4*,80,80,80,85,115" VerticalAlignment="Center">
+                                            <!-- Cover -->
+                                            <Border Grid.Column="0" Width="38" Height="38" CornerRadius="6" Background="{x:Bind CoverBrush, Mode=OneWay}" HorizontalAlignment="Left">
+                                                <Grid>
+                                                    <FontIcon Visibility="{x:Bind CoverIconVisibility, Mode=OneWay}" Glyph="&#xEC4F;" FontSize="15" Foreground="#FFFFFF" />
+                                                    <Image Visibility="{x:Bind CoverImageVisibility, Mode=OneWay}" Source="{x:Bind CoverImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Song Title -->
+                                            <TextBlock Grid.Column="1" Text="{x:Bind Title, Mode=OneWay}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                                            <!-- Artist -->
+                                            <TextBlock Grid.Column="2" Text="{x:Bind Artist, Mode=OneWay}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <!-- Arrangement / Album -->
+                                            <TextBlock Grid.Column="3" Text="{x:Bind ArrangementDisplay, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <!-- Key Original -->
+                                            <Border Grid.Column="4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind KeyDisplay, Mode=OneWay}" FontWeight="Bold" FontSize="12" Foreground="#0284C7" />
+                                            </Border>
+
+                                            <!-- BPM -->
+                                            <TextBlock Grid.Column="5" Text="{x:Bind BpmDisplay, Mode=OneWay}" FontFamily="Consolas" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                                            <!-- Compás (Time Signature) -->
+                                            <TextBlock Grid.Column="6" Text="{x:Bind TimeSignatureDisplay, Mode=OneWay}" FontFamily="Consolas" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#10B981" />
+
+                                            <!-- Duration -->
+                                            <TextBlock Grid.Column="7" Text="{x:Bind DurationText, Mode=OneWay}" FontFamily="Consolas" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <!-- Row Actions: Load to Setlist/Live, Edit Metadata, Delete -->
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Button
+                                                    Click="OnSelectSongFromLibraryClicked"
+                                                    Content="&#xE768;"
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Padding="0"
+                                                    CornerRadius="6"
+                                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                    Foreground="#10B981"
+                                                    BorderThickness="0"
+                                                    ToolTipService.ToolTip="Cargar canción en En Vivo / Agregar al Setlist" />
+                                                <Button
+                                                    Click="OnEditSongMetadataFromRowClicked"
+                                                    Content="&#xE713;"
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Padding="0"
+                                                    CornerRadius="6"
+                                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                    Foreground="#0284C7"
+                                                    BorderThickness="0"
+                                                    ToolTipService.ToolTip="Editar Metadata, Arrangement, BPM, Compás y Enlace" />
+                                                <Button
+                                                    Click="OnRemoveSongFromLibraryClicked"
+                                                    Content="&#xE74D;"
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Padding="0"
+                                                    CornerRadius="6"
+                                                    Background="Transparent"
+                                                    Foreground="#EF4444"
+                                                    BorderThickness="0"
+                                                    ToolTipService.ToolTip="Eliminar canción" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- TAB 4: SETTINGS VIEW (Mackie DL16S Hardware Detection, 16Ch/2Ch Routing, Language, Theme, Folders) -->
+            <ScrollViewer x:Name="SettingsViewGrid" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="20" Padding="28" MaxWidth="860" HorizontalAlignment="Left">
+                    <TextBlock Text="{x:Bind ViewModel.Strings.SettingsTitle, Mode=OneWay}" FontSize="24" FontWeight="Bold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                    <!-- 1. Mackie DL16S USB & Audio Interface Routing Card -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0" Spacing="2">
+                                    <TextBlock Text="{x:Bind ViewModel.Strings.HardwareSectionTitle, Mode=OneWay}" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.Strings.HardwareSectionDesc, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <Button
+                                    Grid.Column="1"
+                                    Command="{x:Bind ViewModel.RefreshAudioDevicesCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.Strings.ScanUsbButton, Mode=OneWay}"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Height="34"
+                                    Padding="12,0"
+                                    CornerRadius="6" />
+                            </Grid>
+
+                            <!-- PnP Status Banner -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Border Width="10" Height="10" CornerRadius="5" Background="{x:Bind ViewModel.MackieStatusBrush, Mode=OneWay}" />
+                                    <TextBlock Text="{x:Bind ViewModel.MackieStatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Interface Selector ComboBox -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{x:Bind ViewModel.Strings.ActiveOutputDeviceLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ComboBox
+                                    ItemsSource="{x:Bind ViewModel.AudioDevices, Mode=OneWay}"
+                                    SelectedItem="{x:Bind ViewModel.SelectedAudioDevice, Mode=TwoWay}"
+                                    DisplayMemberPath="DisplayName"
+                                    HorizontalAlignment="Stretch"
+                                    Height="38" />
+                            </StackPanel>
+
+                            <!-- Output Routing Mode Presets (16-Ch USB vs 2-Ch Split vs Stereo) -->
+                            <StackPanel Spacing="8" Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{x:Bind ViewModel.Strings.OutputRoutingModeLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.RoutingModeDisplayText, Mode=OneWay}" FontSize="12" FontWeight="Bold" Foreground="#0284C7" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button
+                                        Command="{x:Bind ViewModel.ApplyMackie16ChPresetCommand, Mode=OneWay}"
+                                        Content="🎛 16 Canales USB Directos (Mackie DL16S)"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        FontWeight="Bold"
+                                        Height="36"
+                                        Padding="14,0"
+                                        CornerRadius="6" />
+                                    <Button
+                                        Command="{x:Bind ViewModel.ApplySplit2ChPresetCommand, Mode=OneWay}"
+                                        Content="🎧 2 Canales Split (In-Ears L + FOH R)"
+                                        FontWeight="SemiBold"
+                                        Height="36"
+                                        Padding="14,0"
+                                        CornerRadius="6" />
+                                    <Button
+                                        Command="{x:Bind ViewModel.ApplyStereoMasterPresetCommand, Mode=OneWay}"
+                                        Content="🔊 2 Canales Estéreo (Out 1-2)"
+                                        FontWeight="SemiBold"
+                                        Height="36"
+                                        Padding="14,0"
+                                        CornerRadius="6" />
+                                </StackPanel>
+
+                                <TextBlock
+                                    Text="• Mapa Mackie DL16S 16-Ch: USB Ch 1 = Click • USB Ch 2 = Guía (Cues) • USB Ch 3 = Drums • USB Ch 4 = Perc • USB Ch 5 = Bass • USB Ch 6-7 = Guitars • USB Ch 8-9 = Piano/Keys • USB Ch 10-16 = Synths, Vocals &amp; Pads."
+                                    FontSize="11"
+                                    TextWrapping="Wrap"
+                                    Foreground="#10B981" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 2. Language & Editable Localization File Card -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{x:Bind ViewModel.Strings.LanguageSectionTitle, Mode=OneWay}" FontWeight="Bold" FontSize="15" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.Strings.LanguageSectionDesc, Mode=OneWay}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="0,4,0,0">
+                                <ComboBox x:Name="LanguageComboBox" SelectionChanged="OnLanguageSelectionChanged" SelectedIndex="0" Width="220" Height="36">
+                                    <ComboBoxItem Content="🇪🇸 Español (Predeterminado)" Tag="es" />
+                                    <ComboBoxItem Content="🇺🇸 English" Tag="en" />
+                                </ComboBox>
+
+                                <Button
+                                    Click="OnOpenLocalizationFileClicked"
+                                    Content="{x:Bind ViewModel.Strings.OpenLocalizationFileButton, Mode=OneWay}"
+                                    FontWeight="SemiBold"
+                                    Height="36"
+                                    Padding="14,0"
+                                    CornerRadius="6" />
+
+                                <Button
+                                    Click="OnReloadLocalizationClicked"
+                                    Content="{x:Bind ViewModel.Strings.ReloadLocalizationButton, Mode=OneWay}"
+                                    FontWeight="SemiBold"
+                                    Height="36"
+                                    Padding="14,0"
+                                    CornerRadius="6" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 3. Theme Selector -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{x:Bind ViewModel.Strings.ThemeSectionTitle, Mode=OneWay}" FontWeight="Bold" FontSize="15" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.Strings.ThemeSectionDesc, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <RadioButtons x:Name="ThemeRadioButtons" SelectionChanged="OnThemeSelectionChanged" SelectedIndex="0" Margin="0,8,0,0">
+                                <RadioButton Content="{x:Bind ViewModel.Strings.ThemeDarkOption, Mode=OneWay}" Tag="Dark" IsChecked="True" />
+                                <RadioButton Content="{x:Bind ViewModel.Strings.ThemeLightOption, Mode=OneWay}" Tag="Light" />
+                                <RadioButton Content="{x:Bind ViewModel.Strings.ThemeSystemOption, Mode=OneWay}" Tag="Default" />
+                            </RadioButtons>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 4. Dedicated System Folders with Explorer Open Buttons -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{x:Bind ViewModel.Strings.FoldersSectionTitle, Mode=OneWay}" FontWeight="Bold" FontSize="15" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.Strings.FoldersSectionDesc, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="• Multitracks: %USERPROFILE%\Music\EasyTracks\Tracks\" FontFamily="Consolas" FontSize="12" Foreground="#0284C7" />
+                            <TextBlock Text="• Ambient Pads: %USERPROFILE%\Music\EasyTracks\Pads\" FontFamily="Consolas" FontSize="12" Foreground="#9333EA" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
+                                <Button
+                                    Click="OnOpenTracksFolderClicked"
+                                    Content="{x:Bind ViewModel.Strings.OpenTracksFolderButton, Mode=OneWay}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    FontWeight="SemiBold"
+                                    Height="36"
+                                    Padding="14,0"
+                                    CornerRadius="6" />
+                                <Button
+                                    Click="OnOpenPadsFolderClicked"
+                                    Content="{x:Bind ViewModel.Strings.OpenPadsFolderButton, Mode=OneWay}"
+                                    FontWeight="SemiBold"
+                                    Height="36"
+                                    Padding="14,0"
+                                    CornerRadius="6" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
         </Grid>
 
